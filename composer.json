@@ -1,5 +1,8 @@
 {
-    "name": "oxid-esales/paypal-module",
+    "name": "oxidio/module-paypal",
+    "replace": {
+        "oxid-esales/paypal-module": "self.version"
+    },
     "description": "This is the PayPal module for the OXID eShop.",
     "type": "oxideshop-module",
     "keywords": ["oxid", "modules", "eShop"],
@@ -28,7 +31,7 @@
     },
     "autoload": {
         "psr-4": {
-            "OxidEsales\\PayPalModule\\": "../../../source/modules/oe/oepaypal"
+            "OxidEsales\\PayPalModule\\": "./"
         }
     }
 }
