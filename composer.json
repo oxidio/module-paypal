@@ -11,6 +11,9 @@
         "GPL-3.0-only"
     ],
     "extra": {
+        "branch-alias": {
+            "dev-master": "5.x-dev"
+        },
         "oxideshop": {
             "blacklist-filter": [
                 "documentation/**/*.*",
