@@ -4,21 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [5.2.6] - Unreleased
+## [v6.0.1] - 2019-10-21
 
 ### Fixed
-
 - Stabilize acceptance tests.
+
+## [v6.0.0] - 2019-07-23
+
+### Changed
+- Adapt tests to work with new phpunit.
+- Replace deprecated calls to getConfig();
+- Ensure support for PHP 7.2, drop support for PHP 5.6.
+- Replace deprecated calls to getSession();
+
+## [v5.2.6] - Unreleased
+
+### Fixed
 - [0006235](https://bugs.oxid-esales.com/view.php?id=6235) Use comma as decimal separator during capture and refund.
 - [0006994](https://bugs.oxid-esales.com/view.php?id=6994) Fix "Finalize order after PayPal checkout" configuration option not working
 - [0006995](https://bugs.oxid-esales.com/view.php?id=6995) Fix wrong product quantity after clicking "Add and Checkout".
 
-## [5.2.5] - 2019-04-13
+## [v5.2.5] - 2019-04-13
 
 ### Fixed
 - [0006972](https://bugs.oxid-esales.com/view.php?id=6972) Unfinished order with PayPal Express Checkout in some special constellations.
 
-## [5.2.4] - 2019-04-10
+## [v5.2.4] - 2019-04-10
 
 ### Fixed
 - Fix readonly flag for deliveryset_main.tpl.
@@ -30,7 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [0006132](https://bugs.oxid-esales.com/view.php?id=6132) Backwards compatibility break: Fix wrong response of IPNHandler handleRequest [PR-48](https://github.com/OXID-eSales/paypal/pull/48)
 - [0006963](https://bugs.oxid-esales.com/view.php?id=6963) With PayPal Express Checkout the telephone number which is deposited with PayPal in the account is not handed over with to shop
 
-## [5.2.3] - 2018-10-09
+## [v5.2.3] - 2018-10-09
 
 ### Changed
 - Show extra payment costs only if they are not zero [PR-44](https://github.com/OXID-eSales/paypal/pull/44)
@@ -39,20 +50,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [0006774](https://bugs.oxid-esales.com/view.php?id=6774) In backend, orderlist column 'PAYMENT METHOD' stays empty [PR-45](https://github.com/OXID-eSales/paypal/pull/45)
 - Fix and stabilize acceptance tests. Adapt to latest changes in PayPal Gui.
 
-## [5.2.2] - 2018-07-17
+## [v5.2.2] - 2018-07-17
 
 ### Fixed
 - Fix PHP 7.1 compatibility of acceptance tests.
 
 ### Security
 
-## [5.2.1] - 2018-07-12
+## [v5.2.1] - 2018-07-12
 
 ### Fixed
 - Adapt acceptance tests to latest changes in PayPal GUI.
 - Adapt tests to latest PayPal Sandbox
 
-## [5.2.0] - 2018-05-03
+## [v5.2.0] - 2018-05-03
 
 ### Changed
 - Added class \OxidEsales\PayPalModule\Core\IpnConfig.
@@ -68,7 +79,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed 0006122 IPN postback DNS issue. Introduced \OxidEsales\PayPalModule\Core\IpnConfig class to 
   provide the necessary IPN parameters for host and url.  
 
-## [5.1.6] - 2018-03-26
+## [v5.1.6] - 2018-03-26
 
 ### Changed
 - New partnercode Oxid_Cart_ECS_Shortcut is used for BUTTONSOURCE parameter in 
@@ -79,7 +90,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - Unused log directory. Log is written into shop's default log directory. 
 
-## [5.1.5] - 2018-01-23
+## [v5.1.5] - 2018-01-23
 
 ### Added
 - Add hidden configuration parameter OEPayPalDisableIPN and method 
@@ -90,32 +101,35 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Log Acceptance test debug information into log/oepaypal_acceptance_log.txt instead of log/EXCEPTION_LOG.txt.
 
-## [5.1.4] - 2017-11-28
+## [v5.1.4] - 2017-11-28
 
 ### Changed
 - Update PayPal button pictures.
 
-## [5.1.3] - 2017-11-13
+## [v5.1.3] - 2017-11-13
 
 ### Changed
 - Change tables encoding to utf8.
 
-## [5.1.2] - 2017-11-02
+## [v5.1.2] - 2017-11-02
 
 ### Fixed
 - Stabilize Acceptance tests by automatically skipping tests if issues with PayPal Sandbox are detected.
 
-## [5.1.1] - 2017-09-07
+## [v5.1.1] - 2017-09-07
 
 ### Fixed
 - Stabilize Acceptance tests by changing locators.
 
-## [5.1.0] - 2017-08-14
+## [v5.1.0] - 2017-08-14
 
 ### Added
 - Additional PayPal express checkout button in user checkout step in case no user is logged in.
 
 
+[v6.0.1]: https://github.com/OXID-eSales/paypal/compare/v6.0.0...v6.0.1
+[v6.0.0]: https://github.com/OXID-eSales/paypal/compare/v5.2.5...v6.0.0
+[v5.2.6]: https://github.com/OXID-eSales/paypal/compare/v5.2.5...b-5.x
 [v5.2.5]: https://github.com/OXID-eSales/paypal/compare/v5.2.4...v5.2.5
 [v5.2.4]: https://github.com/OXID-eSales/paypal/compare/v5.2.3...v5.2.4
 [v5.2.3]: https://github.com/OXID-eSales/paypal/compare/v5.2.2...v5.2.3

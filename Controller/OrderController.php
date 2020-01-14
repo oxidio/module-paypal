@@ -37,7 +37,8 @@ class OrderController extends OrderController_parent
      */
     public function isPayPal()
     {
-        return ($this->getSession()->getVariable("paymentid") == "oxidpaypal");
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
+        return ($session->getVariable("paymentid") == "oxidpaypal");
     }
 
     /**
@@ -48,8 +49,9 @@ class OrderController extends OrderController_parent
     public function getUser()
     {
         $user = parent::getUser();
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
 
-        $userId = $this->getSession()->getVariable("oepaypal-userId");
+        $userId = $session->getVariable("oepaypal-userId");
         if ($this->isPayPal() && $userId) {
             $payPalUser = oxNew(\OxidEsales\Eshop\Application\Model\User::class);
             if ($payPalUser->load($userId)) {
@@ -69,8 +71,9 @@ class OrderController extends OrderController_parent
     {
         if (!$this->isPayPal()) {
             // removing PayPal payment type from session
-            $this->getSession()->deleteVariable('oepaypal');
-            $this->getSession()->deleteVariable('oepaypal-basketAmount');
+            $session = \OxidEsales\Eshop\Core\Registry::getSession();
+            $session->deleteVariable('oepaypal');
+            $session->deleteVariable('oepaypal-basketAmount');
 
             return parent::getPayment();
         }
@@ -114,7 +117,9 @@ class OrderController extends OrderController_parent
     protected function getOrder()
     {
         $order = oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
-        $order->load($this->getSession()->getVariable('sess_challenge'));
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
+
+        $order->load($session->getVariable('sess_challenge'));
 
         return $order;
     }
@@ -132,7 +137,8 @@ class OrderController extends OrderController_parent
 
         // Detecting PayPal & loading order & execute payment only if go wrong
         if ($this->isPayPal() && ($success == \OxidEsales\Eshop\Application\Model\Order::ORDER_STATE_PAYMENTERROR)) {
-            $payPalType = (int) $this->getSession()->getVariable("oepaypal");
+            $session = \OxidEsales\Eshop\Core\Registry::getSession();
+            $payPalType = (int) $session->getVariable("oepaypal");
             $nextStep = ($payPalType == 2) ? "basket" : "order";
         }
 

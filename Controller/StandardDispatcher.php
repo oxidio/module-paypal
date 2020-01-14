@@ -34,7 +34,7 @@ class StandardDispatcher extends \OxidEsales\PayPalModule\Controller\Dispatcher
      */
     public function setExpressCheckout()
     {
-        $session = $this->getSession();
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
         $session->setVariable("oepaypal", "1");
         try {
             $builder = oxNew(\OxidEsales\PayPalModule\Model\PayPalRequest\SetExpressCheckoutRequestBuilder::class);
@@ -83,7 +83,7 @@ class StandardDispatcher extends \OxidEsales\PayPalModule\Controller\Dispatcher
         }
 
         // saving PayPal token into session
-        $this->getSession()->setVariable("oepaypal-token", $result->getToken());
+        $session->setVariable("oepaypal-token", $result->getToken());
 
         // extracting token and building redirect url
         $url = $this->getPayPalConfig()->getPayPalCommunicationUrl($result->getToken(), $this->userAction);
@@ -125,10 +125,12 @@ class StandardDispatcher extends \OxidEsales\PayPalModule\Controller\Dispatcher
      */
     public function getExpressCheckoutDetails()
     {
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
+
         try {
             $payPalService = $this->getPayPalCheckoutService();
             $builder = oxNew(\OxidEsales\PayPalModule\Model\PayPalRequest\GetExpressCheckoutDetailsRequestBuilder::class);
-            $builder->setSession($this->getSession());
+            $builder->setSession($session);
 
             $request = $builder->buildRequest();
 
@@ -143,8 +145,8 @@ class StandardDispatcher extends \OxidEsales\PayPalModule\Controller\Dispatcher
             return 'payment';
         }
 
-        $this->getSession()->setVariable("oepaypal-payerId", $details->getPayerId());
-        $this->getSession()->setVariable("oepaypal-basketAmount", $details->getAmount());
+        $session->setVariable("oepaypal-payerId", $details->getPayerId());
+        $session->setVariable("oepaypal-basketAmount", $details->getAmount());
 
         // next step - order page
         $next = 'order';
@@ -153,7 +155,7 @@ class StandardDispatcher extends \OxidEsales\PayPalModule\Controller\Dispatcher
         if ($this->getPayPalConfig()->finalizeOrderOnPayPalSide()) {
             $next .= "?fnc=execute";
             $next .= "&sDeliveryAddressMD5=" . $user->getEncodedDeliveryAddress();
-            $next .= "&stoken=" . $this->getSession()->getSessionChallengeToken();
+            $next .= "&stoken=" . $session->getSessionChallengeToken();
         }
 
         // everything is fine - redirect to order
@@ -167,8 +169,9 @@ class StandardDispatcher extends \OxidEsales\PayPalModule\Controller\Dispatcher
      */
     protected function getReturnUrl()
     {
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
         $controllerKey = \OxidEsales\Eshop\Core\Registry::getControllerClassNameResolver()->getIdByClassName(get_class());
-        return $this->getSession()->processUrl($this->getBaseUrl() . "&cl=" . $controllerKey . "&fnc=getExpressCheckoutDetails");
+        return $session->processUrl($this->getBaseUrl() . "&cl=" . $controllerKey . "&fnc=getExpressCheckoutDetails");
     }
 
     /**
@@ -178,6 +181,7 @@ class StandardDispatcher extends \OxidEsales\PayPalModule\Controller\Dispatcher
      */
     protected function getCancelUrl()
     {
-        return $this->getSession()->processUrl($this->getBaseUrl() . "&cl=payment");
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
+        return $session->processUrl($this->getBaseUrl() . "&cl=payment");
     }
 }

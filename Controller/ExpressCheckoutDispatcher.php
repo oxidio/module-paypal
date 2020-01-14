@@ -52,7 +52,7 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
      */
     public function setExpressCheckout()
     {
-        $session = $this->getSession();
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
         $session->setVariable("oepaypal", "2");
         try {
             /** @var \OxidEsales\PayPalModule\Model\PayPalRequest\SetExpressCheckoutRequestBuilder $builder */
@@ -123,7 +123,7 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
         }
 
         // saving PayPal token into session
-        $this->getSession()->setVariable("oepaypal-token", $result->getToken());
+        $session->setVariable("oepaypal-token", $result->getToken());
 
         // extracting token and building redirect url
         $url = $this->getPayPalConfig()->getPayPalCommunicationUrl($result->getToken(), $this->userAction);
@@ -141,12 +141,13 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
      */
     public function getExpressCheckoutDetails()
     {
-        $basket = $this->getSession()->getBasket();
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
+        $basket = $session->getBasket();
 
         try {
             $payPalService = $this->getPayPalCheckoutService();
             $builder = oxNew(\OxidEsales\PayPalModule\Model\PayPalRequest\GetExpressCheckoutDetailsRequestBuilder::class);
-            $builder->setSession($this->getSession());
+            $builder->setSession($session);
             $request = $builder->buildRequest();
             $details = $payPalService->getExpressCheckoutDetails($request);
 
@@ -165,7 +166,7 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
         }
 
         // setting PayPal as current active payment
-        $this->getSession()->setVariable('paymentid', "oxidpaypal");
+        $session->setVariable('paymentid', "oxidpaypal");
         $basket->setPayment("oxidpaypal");
 
         if (!$this->isPaymentValidForUserCountry($user)) {
@@ -200,16 +201,16 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
             return "basket";
         }
 
-        $this->getSession()->setVariable("oepaypal-payerId", $details->getPayerId());
-        $this->getSession()->setVariable("oepaypal-userId", $user->getId());
-        $this->getSession()->setVariable("oepaypal-basketAmount", $details->getAmount());
+        $session->setVariable("oepaypal-payerId", $details->getPayerId());
+        $session->setVariable("oepaypal-userId", $user->getId());
+        $session->setVariable("oepaypal-basketAmount", $details->getAmount());
 
         $next = "order";
 
         if ($this->getPayPalConfig()->finalizeOrderOnPayPalSide()) {
             $next .= "?fnc=execute";
             $next .= "&sDeliveryAddressMD5=" . $user->getEncodedDeliveryAddress();
-            $next .= "&stoken=" . $this->getSession()->getSessionChallengeToken();
+            $next .= "&stoken=" . $session->getSessionChallengeToken();
         }
 
         return $next;
@@ -246,8 +247,9 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
      */
     protected function getReturnUrl()
     {
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
         $controllerKey = \OxidEsales\Eshop\Core\Registry::getControllerClassNameResolver()->getIdByClassName(get_class());
-        return $this->getSession()->processUrl($this->getBaseUrl() . "&cl=" . $controllerKey . "&fnc=getExpressCheckoutDetails");
+        return $session->processUrl($this->getBaseUrl() . "&cl=" . $controllerKey . "&fnc=getExpressCheckoutDetails");
     }
 
     /**
@@ -257,13 +259,14 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
      */
     protected function getCancelUrl()
     {
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
         $cancelURLFromRequest = $this->getRequest()->getRequestParameter('oePayPalCancelURL');
-        $cancelUrl = $this->getSession()->processUrl($this->getBaseUrl() . "&cl=basket");
+        $cancelUrl = $session->processUrl($this->getBaseUrl() . "&cl=basket");
 
         if ($cancelURLFromRequest) {
             $cancelUrl = html_entity_decode(urldecode($cancelURLFromRequest));
         } elseif ($requestedControllerKey = $this->getRequestedControllerKey()) {
-            $cancelUrl = $this->getSession()->processUrl($this->getBaseUrl() . '&cl=' . $requestedControllerKey);
+            $cancelUrl = $session->processUrl($this->getBaseUrl() . '&cl=' . $requestedControllerKey);
         }
 
         return $cancelUrl;
@@ -293,8 +296,9 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
      */
     protected function getCallBackUrl()
     {
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
         $controllerKey = \OxidEsales\Eshop\Core\Registry::getControllerClassNameResolver()->getIdByClassName(get_class());
-        return $this->getSession()->processUrl($this->getBaseUrl() . "&cl=" . $controllerKey . "&fnc=processCallBack");
+        return $session->processUrl($this->getBaseUrl() . "&cl=" . $controllerKey . "&fnc=processCallBack");
     }
 
     /**
@@ -342,13 +346,14 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
         }
 
         //basket
-        $basket = $this->getSession()->getBasket();
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
+        $basket = $session->getBasket();
 
         // get possible delivery sets
         $delSetList = $this->getDeliverySetList($user);
 
         //no shipping methods for user country
-        if (!count($delSetList)) {
+        if (empty($delSetList)) {
             $logger = $this->getLogger();
             $logger->log("Callback error: NO DELIVERY LIST SET");
 
@@ -369,7 +374,7 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
             return;
         }
 
-        $this->getSession()->setVariable('oepaypal-oxDelSetList', $deliverySetList);
+        $session->setVariable('oepaypal-oxDelSetList', $deliverySetList);
 
         $totalDeliveries = $this->setDeliverySetListForCallbackResponse($payPalService, $deliverySetList, $user, $basket);
 
@@ -421,7 +426,7 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
                 $deliveryList = $deliveryListProvider->getDeliveryList($basket, $user, $this->getUserShippingCountryId($user), $delSetId);
             }
 
-            if (count($deliveryList) > 0) {
+            if (is_array($deliveryList) && !empty($deliveryList)) {
                 $price = 0;
 
                 if (\OxidEsales\Eshop\Core\Registry::getConfig()->getConfigParam('bl_perfLoadDelivery')) {
@@ -516,13 +521,14 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
     protected function extractShippingId($shippingOptionName, $user)
     {
         $result = null;
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
 
         $charset = $this->getPayPalConfig()->getCharset();
         $shippingOptionName = htmlentities(html_entity_decode($shippingOptionName, ENT_QUOTES, $charset), ENT_QUOTES, $charset);
 
         $name = trim(str_replace(\OxidEsales\Eshop\Core\Registry::getLang()->translateString("OEPAYPAL_PRICE"), "", $shippingOptionName));
 
-        $deliverySetList = $this->getSession()->getVariable("oepaypal-oxDelSetList");
+        $deliverySetList = $session->getVariable("oepaypal-oxDelSetList");
 
         if (!$deliverySetList) {
             $delSetList = $this->getDeliverySetList($user);
@@ -549,6 +555,7 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
      */
     protected function initializeUserData($details)
     {
+        $session = \OxidEsales\Eshop\Core\Registry::getSession();
         $userEmail = $details->getEmail();
         $loggedUser = $this->getUser();
         if ($loggedUser) {
@@ -576,13 +583,13 @@ class ExpressCheckoutDispatcher extends \OxidEsales\PayPalModule\Controller\Disp
             } else {
                 // removing custom shipping address ID from session as user uses billing
                 // address for shipping
-                $this->getSession()->deleteVariable('deladrid');
+                $session->deleteVariable('deladrid');
             }
         } else {
             $user->createPayPalUser($details);
         }
 
-        $this->getSession()->setVariable('usr', $user->getId());
+        $session->setVariable('usr', $user->getId());
 
         return $user;
     }
