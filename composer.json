@@ -12,7 +12,9 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-master": "5.x-dev"
+            "dev-oxidio-5.x": "5.x-dev",
+            "dev-oxidio-6.x": "6.x-dev",
+            "dev-oxidio-master": "7.x-dev"
         },
         "oxideshop": {
             "blacklist-filter": [
