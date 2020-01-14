@@ -185,6 +185,11 @@ abstract class BaseAcceptanceTestCase extends \OxidEsales\TestingLibrary\Accepta
                 'value' => true,
                 'module' => 'module:oepaypal'
             ),
+            'blOEPayPalFinalizeOrderOnPayPal' => array(
+                'type' => 'bool',
+                'value' => 0,
+                'module' => 'module:oepaypal'
+            ),
         ));
 
         $this->callShopSC(\OxidEsales\PayPalModule\Tests\Acceptance\PayPalLogHelper::class, 'cleanPayPalLog');
@@ -455,6 +460,23 @@ abstract class BaseAcceptanceTestCase extends \OxidEsales\TestingLibrary\Accepta
         ) {
             $this->markTestIncomplete('Cannot find login button. Login form fields found: ' . $debug);
         }
+
+        $element = $this->getElementLazy("id=notNowLink", false);
+        if ($element) {
+            $element->click();
+            $this->_waitForAppear('isElementPresent', "//input[@id='confirmButtonTop']", 5, true);
+        }
+
+        //When reaching this point in code, user should be logged in to PayPal sandbox. As we have issues with PayPal
+        //sandbox from time to time, doublecheck and skip test if we cannot be sure login was succesful.
+        if ($loginFound &&
+                !$this->isElementPresent("//input[@id='continue']") &&
+                !$this->isElementPresent("//input[@id='confirmButtonTop']") &&
+                !$this->isTextPresent($this->getLoginDataByName('sBuyerFirstName')) &&
+                !$this->isTextPresent($loginEmail)
+        ) {
+            $this->markTestIncomplete('User should be logged in to PayPal but cannot confirm being logged in. Autoskipping test.' );
+        }
     }
 
     /**
@@ -470,12 +492,12 @@ abstract class BaseAcceptanceTestCase extends \OxidEsales\TestingLibrary\Accepta
         $element = $this->getElementLazy($xpath, false);
         if ($element) {
             $loginFound = true;
-            $element->click();
+            $this->clickAndWait($xpath);
         } else {
             $element = $this->getElementLazy(self::PAYPAL_LOGIN_BUTTON_ID_OLD, false);
             if ($element) {
                 $loginFound = true;
-                $element->click();
+                $this->clickAndWait(self::PAYPAL_LOGIN_BUTTON_ID_OLD);
             }
         }
         return $loginFound;
@@ -602,6 +624,8 @@ abstract class BaseAcceptanceTestCase extends \OxidEsales\TestingLibrary\Accepta
             $this->clickAndWait("id=confirmButtonTop");
         } elseif ($this->isElementPresent("id=retryLink")){
             $this->markTestIncomplete('PayPal is showing us their retry link so the have some internal problems.');
+        } elseif ($this->isElementPresent("id=login_email") || $this->isElementPresent("id=email")) {
+            $this->markTestIncomplete('We unexpectedly get the PayPal login form again. Autoskipping test.');
         }
 
         //we should be redirected back to shop at this point
@@ -785,7 +809,8 @@ abstract class BaseAcceptanceTestCase extends \OxidEsales\TestingLibrary\Accepta
     private function assertLogValues($logData, $expected)
     {
         foreach ($expected as $key => $value) {
-            $this->assertEquals($value, $logData[$key]);
+            $actualValue = isset($logData[$key]) ? $logData[$key] : null;
+            $this->assertEquals($value, $actualValue);
         }
     }
 
@@ -1104,5 +1129,31 @@ abstract class BaseAcceptanceTestCase extends \OxidEsales\TestingLibrary\Accepta
         }
 
         $this->loginToOldSandbox($loginMail, $loginPassword);
+    }
+
+    /**
+     * Test helper to search for product, put to basket, click on PP ECS button.
+     */
+    protected function addToBasketProceedToPayPal()
+    {
+        $this->searchFor("1001");
+        $this->clickAndWait(self::SELECTOR_ADD_TO_BASKET);
+
+        $this->click("id=minibasketIcon");
+        $this->waitForElement("paypalExpressCheckoutButton");
+        $this->assertElementPresent("paypalExpressCheckoutButton", "PayPal express button not displayed in the cart");
+        $this->clickAndWait("id=paypalExpressCheckoutButton");
+
+        // Check what was communicated with PayPal
+        $assertRequest = [
+            'L_PAYMENTREQUEST_0_AMT0' => 81.00,
+            'PAYMENTREQUEST_0_AMT' => 81.00,
+            'L_PAYMENTREQUEST_0_QTY0' => 1,
+            'PAYMENTREQUEST_0_CURRENCYCODE' => 'EUR'];
+        $assertResponse = ['ACK' => 'Success'];
+        $this->assertLogData($assertRequest, $assertResponse);
+
+        //just in case ensure we are logged out of PayPal
+        $this->doPayPalLogOut();
     }
 }
