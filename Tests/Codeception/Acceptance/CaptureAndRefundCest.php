@@ -40,12 +40,7 @@ class CaptureAndRefundCest
 
         $basket = new Basket($I);
 
-        $basketItem = [
-            'id' => 'dc5ffdf380e15674b56dd562a7cb6aec',
-            'title' => 'Kuyichi leather belt JEVER',
-            'amount' => 4,
-            'price' => '119,60 €'
-        ];
+        $basketItem = Fixtures::get('product');
 
         //add Product to basket
         $basket->addProductToBasket($basketItem['id'], $basketItem['amount']);
@@ -80,10 +75,12 @@ class CaptureAndRefundCest
         $ordersList->searchByOrderNumber($order['order_number']);
         $I->click($order['payment_method']);
 
+        $I->selectListFrame();
         $paypalOrder = new PayPalOrder($I);
         $I->waitForElement($paypalOrder->paypalTab, 10);
         $I->click($paypalOrder->paypalTab);
-        $I->executeJS("top.oxid.admin.changeEditBar('oepaypalorder_paypal',6);return false;");
+        $I->executeJS("top.oxid.admin.changeEditBar('oepaypalorder_paypal',6);return true;");
+        $I->waitForJS("top.oxid.admin.changeEditBar('oepaypalorder_paypal',6);return true;");
 
         $I->selectEditFrame();
         $paypalOrder->captureAmount($order['capture_amount'], $order['capture_type']);
